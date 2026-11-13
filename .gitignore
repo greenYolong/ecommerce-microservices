@@ -1,0 +1,29 @@
+# Build Maven (un dossier target/ par module)
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse / STS
+.classpath
+.project
+.settings/
+.factorypath
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+nohup.out
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Variables d'environnement locales (si tu en ajoutes un jour)
+.env

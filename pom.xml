@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.1.2</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+
+	<groupId>com.ecommerce</groupId>
+	<artifactId>ecommerce-microservices</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<name>ecommerce-microservices</name>
+	<description>Architecture microservices e-commerce (migration du projet univ)</description>
+
+	<modules>
+		<module>discovery-service</module>
+		<module>config-service</module>
+		<module>gateway-service</module>
+		<module>catalogue-service</module>
+		<module>commande-service</module>
+		<module>paiement-service</module>
+	</modules>
+
+	<properties>
+		<java.version>27</java.version>
+		<maven.compiler.release>27</maven.compiler.release>
+		<spring-cloud.version>2025.1.2</spring-cloud.version>
+		<jersey.version>3.1.11</jersey.version>
+		<springdoc.version>2.8.13</springdoc.version>
+		<lombok.version>1.18.48</lombok.version>
+	</properties>
+
+	<!-- Versions gérées ici, pas de dépendances communes imposées aux modules :
+	     chaque service ne déclare que ce dont il a réellement besoin. -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springdoc</groupId>
+				<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+				<version>${springdoc.version}</version>
+			</dependency>
+
+			<!-- Transport Jersey 3 utilisé par le client Eureka (EurekaTransportConfig).
+			     eureka-client-jersey3 fournit Jersey3TransportClientFactories : dans univ il arrivait
+			     par transitivité via spring-cloud-starter-netflix-eureka-server (EurekaApplication
+			     partage le même pom.xml). Un service qui n'est que client Eureka doit le déclarer lui-même. -->
+			<dependency>
+				<groupId>com.netflix.eureka</groupId>
+				<artifactId>eureka-client-jersey3</artifactId>
+				<version>2.0.6</version>
+			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jersey.core</groupId>
+				<artifactId>jersey-client</artifactId>
+				<version>${jersey.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jersey.core</groupId>
+				<artifactId>jersey-common</artifactId>
+				<version>${jersey.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jersey.inject</groupId>
+				<artifactId>jersey-hk2</artifactId>
+				<version>${jersey.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jersey.connectors</groupId>
+				<artifactId>jersey-apache-connector</artifactId>
+				<version>${jersey.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<release>27</release>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+</project>
