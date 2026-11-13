@@ -1,0 +1,145 @@
+networks:
+  ecommerce-net:
+    driver: bridge
+
+volumes:
+  catalogue-db-data:
+  commande-db-data:
+  paiement-db-data:
+
+services:
+
+  discovery-service:
+    image: discovery-service:1.0
+    container_name: discovery-service
+    networks:
+      - ecommerce-net
+    ports:
+      - "8761:8761"
+
+  config-service:
+    image: config-service:1.0
+    container_name: config-service
+    networks:
+      - ecommerce-net
+    ports:
+      - "8888:8888"
+    depends_on:
+      - discovery-service
+
+  catalogue-db:
+    image: postgres:17
+    container_name: catalogue-db
+    networks:
+      - ecommerce-net
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: catalogue_db
+      POSTGRES_USER: catalogue_user
+      POSTGRES_PASSWORD: catalogue_pwd
+    volumes:
+      - catalogue-db-data:/var/lib/postgresql/data
+
+  commande-db:
+    image: postgres:17
+    container_name: commande-db
+    networks:
+      - ecommerce-net
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: commande_db
+      POSTGRES_USER: commande_user
+      POSTGRES_PASSWORD: commande_pwd
+    volumes:
+      - commande-db-data:/var/lib/postgresql/data
+
+  paiement-db:
+    image: postgres:17
+    container_name: paiement-db
+    networks:
+      - ecommerce-net
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_DB: paiement_db
+      POSTGRES_USER: paiement_user
+      POSTGRES_PASSWORD: paiement_pwd
+    volumes:
+      - paiement-db-data:/var/lib/postgresql/data
+
+  catalogue-service:
+    image: catalogue-service:1.0
+    container_name: catalogue-service
+    restart: on-failure
+    networks:
+      - ecommerce-net
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_URL: http://discovery-service:8761/eureka/
+      CONFIG_URL: http://config-service:8888
+      DB_URL: jdbc:postgresql://catalogue-db:5432/catalogue_db
+      DB_USER: catalogue_user
+      DB_PASSWORD: catalogue_pwd
+    depends_on:
+      - discovery-service
+      - config-service
+      - catalogue-db
+
+  commande-service:
+    image: commande-service:1.0
+    container_name: commande-service
+    restart: on-failure
+    networks:
+      - ecommerce-net
+    ports:
+      - "8082:8082"
+    environment:
+      EUREKA_URL: http://discovery-service:8761/eureka/
+      CONFIG_URL: http://config-service:8888
+      DB_URL: jdbc:postgresql://commande-db:5432/commande_db
+      DB_USER: commande_user
+      DB_PASSWORD: commande_pwd
+    depends_on:
+      - discovery-service
+      - config-service
+      - commande-db
+
+  paiement-service:
+    image: paiement-service:1.0
+    container_name: paiement-service
+    restart: on-failure
+    networks:
+      - ecommerce-net
+    ports:
+      - "8083:8083"
+    environment:
+      EUREKA_URL: http://discovery-service:8761/eureka/
+      CONFIG_URL: http://config-service:8888
+      DB_URL: jdbc:postgresql://paiement-db:5432/paiement_db
+      DB_USER: paiement_user
+      DB_PASSWORD: paiement_pwd
+    depends_on:
+      - discovery-service
+      - config-service
+      - paiement-db
+
+  gateway-service:
+    image: gateway-service:1.0
+    container_name: gateway-service
+    restart: on-failure
+    networks:
+      - ecommerce-net
+    ports:
+      - "9000:9000"
+    environment:
+      EUREKA_URL: http://discovery-service:8761/eureka/
+      CONFIG_URL: http://config-service:8888
+    depends_on:
+      - discovery-service
+      - config-service
+      - catalogue-service
+      - commande-service
+      - paiement-service
