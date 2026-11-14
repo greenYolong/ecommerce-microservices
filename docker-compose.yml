@@ -10,14 +10,26 @@ volumes:
 services:
 
   discovery-service:
+    build:
+      context: ./discovery-service
+      dockerfile: Dockerfile
     image: discovery-service:1.0
     container_name: discovery-service
     networks:
       - ecommerce-net
     ports:
       - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
 
   config-service:
+    build:
+      context: ./config-service
+      dockerfile: Dockerfile
     image: config-service:1.0
     container_name: config-service
     networks:
@@ -25,7 +37,14 @@ services:
     ports:
       - "8888:8888"
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
 
   catalogue-db:
     image: postgres:17
@@ -40,6 +59,11 @@ services:
       POSTGRES_PASSWORD: catalogue_pwd
     volumes:
       - catalogue-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalogue_user -d catalogue_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   commande-db:
     image: postgres:17
@@ -54,6 +78,11 @@ services:
       POSTGRES_PASSWORD: commande_pwd
     volumes:
       - commande-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U commande_user -d commande_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   paiement-db:
     image: postgres:17
@@ -68,8 +97,16 @@ services:
       POSTGRES_PASSWORD: paiement_pwd
     volumes:
       - paiement-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paiement_user -d paiement_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   catalogue-service:
+    build:
+      context: ./catalogue-service
+      dockerfile: Dockerfile
     image: catalogue-service:1.0
     container_name: catalogue-service
     restart: on-failure
@@ -84,11 +121,23 @@ services:
       DB_USER: catalogue_user
       DB_PASSWORD: catalogue_pwd
     depends_on:
-      - discovery-service
-      - config-service
-      - catalogue-db
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      catalogue-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
 
   commande-service:
+    build:
+      context: ./commande-service
+      dockerfile: Dockerfile
     image: commande-service:1.0
     container_name: commande-service
     restart: on-failure
@@ -103,11 +152,23 @@ services:
       DB_USER: commande_user
       DB_PASSWORD: commande_pwd
     depends_on:
-      - discovery-service
-      - config-service
-      - commande-db
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      commande-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
 
   paiement-service:
+    build:
+      context: ./paiement-service
+      dockerfile: Dockerfile
     image: paiement-service:1.0
     container_name: paiement-service
     restart: on-failure
@@ -122,11 +183,23 @@ services:
       DB_USER: paiement_user
       DB_PASSWORD: paiement_pwd
     depends_on:
-      - discovery-service
-      - config-service
-      - paiement-db
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      paiement-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
 
   gateway-service:
+    build:
+      context: ./gateway-service
+      dockerfile: Dockerfile
     image: gateway-service:1.0
     container_name: gateway-service
     restart: on-failure
@@ -138,8 +211,19 @@ services:
       EUREKA_URL: http://discovery-service:8761/eureka/
       CONFIG_URL: http://config-service:8888
     depends_on:
-      - discovery-service
-      - config-service
-      - catalogue-service
-      - commande-service
-      - paiement-service
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      catalogue-service:
+        condition: service_healthy
+      commande-service:
+        condition: service_healthy
+      paiement-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 20s

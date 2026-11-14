@@ -13,7 +13,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("API Catalogue")
-                        .version("1.0")
+                        .version("1.1")
                         .description("Documentation de l'API du service Catalogue"));
     }
 }
